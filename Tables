@@ -1,0 +1,63 @@
+CREATE DATABASE IF NOT EXISTS retail_system;
+USE retail_system;
+
+-- 1. CUSTOMERS TABLE
+CREATE TABLE customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- 2. PRODUCTS TABLE
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(150) NOT NULL,
+    sku VARCHAR(50) UNIQUE NOT NULL,
+    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0.00),
+    stock_quantity INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+
+-- 3. ORDERS TABLE
+CREATE TABLE orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    status ENUM('pending', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- 4. ORDER ITEMS TABLE (The junction table for products in an order)
+CREATE TABLE order_items (
+    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- 5. RETURNS TABLE (Tracks the overall return transaction)
+CREATE TABLE returns (
+    return_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL, -- Tracks which parent order this return belongs to
+    return_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    refund_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    refund_status ENUM('initiated', 'processed', 'rejected') DEFAULT 'initiated',
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- 6. RETURN ITEMS TABLE (Granular line-item level tracking)
+CREATE TABLE return_items (
+    return_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    return_id INT NOT NULL,
+    order_item_id INT NOT NULL, -- Specifically points to the item purchased
+    quantity INT NOT NULL CHECK (quantity > 0), -- Must be less than or equal to order_items.quantity
+    reason ENUM('defective', 'wrong_size', 'not_as_described', 'changed_mind', 'other') NOT NULL,
+    condition_received ENUM('resellable', 'damaged', 'refurbished') DEFAULT 'resellable',
+    FOREIGN KEY (return_id) REFERENCES returns(return_id) ON DELETE CASCADE,
+    FOREIGN KEY (order_item_id) REFERENCES order_items(order_item_id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
