@@ -8,7 +8,7 @@ sns.set_theme(style="whitegrid")
 plt.rcParams.update({'font.size': 10, 'figure.autolayout': True})
 
 db_config = {
-    'host': 'localhost',
+    'host': '127.0.0.1:3306',
     'user': 'root',
     'password': 'password',
     'database': 'retail_system'
