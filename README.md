@@ -20,13 +20,6 @@ A simple project that uses SQL to store and query data, Python to visualize it, 
    pip install pandas matplotlib
    python Plots.py
    ```
-4. Open the dashboard to view the results.
-
-## Preview
-
-![Dashboard 1](d1.PNG)
-![Dashboard 2](d2.png)
-![Python Plot](python_plot.png)
 
 ## Tools Used
 
